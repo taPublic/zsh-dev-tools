@@ -1,2 +1,2 @@
 # zsh-dev-tools
-ZSH Custom Dev Tools Plugin
+ZSH С9 Automatization Dev Tools Plugin
