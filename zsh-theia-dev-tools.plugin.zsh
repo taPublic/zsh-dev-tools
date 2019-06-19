@@ -1,5 +1,15 @@
 function _get_ide_port {
-  echo "$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
+  local container
+  local running
+
+  container=$(_get_ide_container)
+  running=$(_check_container_running "$container")
+
+  if [ "$running" = "true" ]; then
+    echo "$(docker inspect --format='{{(index (index .NetworkSettings.Ports "3000/tcp") 0).HostPort}}' "$container")"
+  else
+    echo "$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
+  fi
 }
 
 function _get_ide_name {
@@ -12,6 +22,14 @@ function _get_ide_host {
 
 function _get_ide_container_name {
   echo "$1-ide"
+}
+
+function _get_ide_container {
+  local name
+
+  name=$(_get_ide_name)
+  
+  echo $(_get_ide_container_name "$name")
 }
 
 function _check_container_running {
@@ -30,15 +48,13 @@ function _check_container_started {
 
 function _start_ide {
   local port
-  local name
   local host
   local running
   local container
 
   port=$(_get_ide_port)
-  name=$(_get_ide_name)
   host=$(_get_ide_host "$port")
-  container=$(_get_ide_container_name "$name")
+  container=$(_get_ide_container)
   running=$(_check_container_running "$container")
 
   if [ "$running" != "true" ]; then
@@ -56,19 +72,16 @@ function _start_ide {
   done
 
   open "http://$host"
-
 }
 
 function _stop_ide {
-  local name
   local container
   local running
 
-  name=$(_get_ide_name)
-  container=$(_get_ide_container_name "$name")
+  container=$(_get_ide_container)
   running=$(docker inspect --format="{{.State.Running}}" "$container" 2> /dev/null)
 
-  if [ "$running" == "true" ]; then
+  if [ "$running" = "true" ]; then
     docker stop "$container"
   fi
 }
@@ -86,5 +99,5 @@ function ide {
     *)
         echo "Usage: ide {start|stop}"
         ;;
-esac
+  esac
 }
