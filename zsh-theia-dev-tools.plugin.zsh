@@ -6,7 +6,7 @@ function _get_ide_port {
   running=$(_check_container_running "$container")
 
   if [ "$running" = "true" ]; then
-    echo "$(docker inspect --format='{{(index (index .NetworkSettings.Ports "3000/tcp") 0).HostPort}}' au-backend-skeleton-ide)"
+    echo "$(docker inspect --format='{{(index (index .NetworkSettings.Ports "3000/tcp") 0).HostPort}}' "$container")"
   else
     echo "$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
   fi
